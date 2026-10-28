@@ -98,6 +98,19 @@ table.tt td,table.tt th{padding:6px 4px;border-bottom:1px solid var(--line);text
 table.tt tr.hl td{background:#fff4e4;font-weight:700}
 #toast{position:fixed;left:12px;right:12px;bottom:calc(78px + var(--safe-b));background:#2b2a26;color:#fff;border-radius:14px;padding:12px 14px;font-size:15.5px;z-index:30;transform:translateY(40px);opacity:0;visibility:hidden;transition:all .35s;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 #toast.on{transform:none;opacity:1;visibility:visible}
+/* alarm long-press */
+[data-at]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.it.pressing .b,.kv.pressing{background:#fff1dc !important;transition:background .5s}
+#sheetBg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;display:none}
+#sheetBg.on{display:block}
+#sheet{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-radius:20px 20px 0 0;padding:16px 16px calc(16px + var(--safe-b));z-index:41;transform:translateY(105%);transition:transform .25s;max-width:720px;margin:0 auto;max-height:88vh;overflow:auto}
+#sheet.on{transform:none}
+.lead{display:flex;gap:6px;margin:10px 0}
+.lead button{flex:1;border:1.5px solid var(--forest2);background:#fff;color:var(--forest2);border-radius:10px;padding:9px 0;font-weight:600}
+.lead button.on{background:var(--forest2);color:#fff}
+#shTime{font-family:inherit;font-size:30px;font-weight:700;line-height:1.2;border:1px solid var(--line);border-radius:12px;padding:6px 10px;width:100%;background:#fff;color:var(--ink)}
+#sheet .btn{display:block;width:100%;text-align:center;margin:8px 0 0;padding:13px}
+#sheet ol{padding-left:20px;margin:6px 0}
 @media (prefers-reduced-motion:reduce){.cloud,.star{animation:none}}
 </style>
 </head>
@@ -134,6 +147,7 @@ table.tt tr.hl td{background:#fff4e4;font-weight:700}
     </div>
     <h2>✅ 待辦清單</h2>
     <div class="card" id="todo"></div>
+    <p class="src">打勾只存在「這支手機的這個瀏覽器」裡，不會同步給同行的人；Safari、加到主畫面的 App、Telegram 內建瀏覽器三者各自分開記。</p>
     <h2>🚆 關鍵交通</h2>
     <div class="card">
       <div class="kv"><span>10/29 去程 高鐵 609 台北→嘉義</span><b>07:46–09:13</b></div>
@@ -162,7 +176,7 @@ table.tt tr.hl td{background:#fff4e4;font-weight:700}
     <div class="seg" id="skySeg"></div>
     <div id="skyCard"></div>
     <div class="card tip">
-      <h3>怎麼看這些時間</h3>
+      <h3>怎麼看這些時間</h3><div class="muted">⏰ 長按有時間的那一列可設鬧鐘</div>
       <ul class="clean">
         <li><b>氣象署時刻</b>是「嘉義縣」官方資料（海平面、平坦地平線）。</li>
         <li><b>祝山觀日平台</b>實際看到太陽探出玉山山脈的時間較晚，林鐵處官方表：10/26–31 約 <b>06:30</b>。</li>
@@ -199,6 +213,21 @@ table.tt tr.hl td{background:#fff4e4;font-weight:700}
   <button data-p="info"><span class="i">📌</span>須知</button>
 </nav>
 <div id="toast"></div>
+<div id="sheetBg"></div>
+<div id="sheet" role="dialog" aria-label="設定鬧鐘">
+  <h3 id="shTitle"></h3><div class="muted" id="shSub"></div>
+  <div class="lead" id="shLead"><button data-l="0">準時</button><button data-l="10">提前 10 分</button><button data-l="30">提前 30 分</button></div>
+  <input type="time" id="shTime">
+  <div id="shBtns"></div>
+  <details class="muted" style="margin-top:12px"><summary>📱 iPhone 第一次用：建立「阿里山鬧鐘」捷徑（約 1 分鐘）</summary>
+    <ol>
+      <li>打開「捷徑」App → 右上角「＋」新增捷徑，命名為 <b>阿里山鬧鐘</b>（名字要一模一樣）。</li>
+      <li>加入動作「<b>從輸入取得日期</b>」（Get Dates from Input），輸入選「捷徑輸入」。</li>
+      <li>加入動作「<b>製作鬧鐘</b>」（Create Alarm）：時間選上一步的「日期」，標籤選「捷徑輸入」。</li>
+      <li>右上角 ⓘ 打開「在分享表單中顯示」可不開；直接儲存即可。</li>
+    </ol>之後在這裡按「iPhone 鬧鐘」就會直接幫你建好鬧鐘。iOS 鬧鐘只認時間，會響在「下一次」的這個時刻。</details>
+  <button class="btn ghost" id="shClose">取消</button>
+</div>
 
 <script>
 /* ================= DATA ================= */
@@ -454,12 +483,12 @@ function renderPlan(key){
   curDay=key; const day=TRIP_DAYS.find(x=>x.d===key);
   $('#daySeg').innerHTML=TRIP_DAYS.map(x=>`<button data-d="${x.d}" class="${x.d===key?'on':''}">${x.label.split('｜')[0]} ${x.d.slice(5).replace('-','/')}</button>`).join('');
   $('#daySeg').querySelectorAll('button').forEach(b=>b.onclick=()=>renderPlan(b.dataset.d));
-  const a=ASTRO[key]; $('#dayHead').innerHTML=`${day.label}・${day.wx}　🌅 ${a.sr}　🌇 ${a.ss}　🌙 ${a.mr} 升`;
+  const a=ASTRO[key]; $('#dayHead').innerHTML=`${day.label}・${day.wx}　🌅 ${a.sr}　🌇 ${a.ss}　🌙 ${a.mr} 升<br>⏰ 長按任一行程可設鬧鐘`;
   const now=nowTW(), today=ymd(now), m=minsOf(now);
   $('#timeline').innerHTML=PLAN[key].map((it,idx)=>{
     const s=tm(it.t), e=tm(it.e)||(s!==null?s+30:null); let st='';
     if(today===key&&s!==null){ if(m>=s&&m<e)st='now'; else if(m>=e)st='past'; } else if(today>key)st='past';
-    return `<div class="it ${it.k} ${st}" data-i="${idx}"><div class="t">${it.t}</div><span class="dot"></span><div class="b"><div class="ttl">${it.n}${st==='now'?'<span class="nowtag">現在</span>':''}</div>${it.e?`<div class="muted">${it.t}–${it.e}</div>`:''}<div>${chipList(it.d)}${chipList(it.w,'w')}</div>${it.m?`<div class="more">${it.m}</div>`:''}</div></div>`;
+    return `<div class="it ${it.k} ${st}" data-i="${idx}" data-at="${it.t}" data-an="${it.n.replace(/"/g,'&quot;')}" data-ad="${key}"><div class="t">${it.t}</div><span class="dot"></span><div class="b"><div class="ttl">${it.n}${st==='now'?'<span class="nowtag">現在</span>':''}</div>${it.e?`<div class="muted">${it.t}–${it.e}</div>`:''}<div>${chipList(it.d)}${chipList(it.w,'w')}</div>${it.m?`<div class="more">${it.m}</div>`:''}</div></div>`;
   }).join('');
   $('#timeline').querySelectorAll('.it').forEach(el=>el.onclick=()=>el.classList.toggle('open'));
 }
@@ -488,19 +517,19 @@ function renderSky(key){
   $('#skySeg').innerHTML=TRIP_DAYS.map(x=>`<button data-d="${x.d}" class="${x.d===key?'on':''}">${x.d.slice(5).replace('-','/')}</button>`).join('');
   $('#skySeg').querySelectorAll('button').forEach(b=>b.onclick=()=>renderSky(b.dataset.d));
   const a=ASTRO[key], g=goldenTimes(key), mr=tm(a.mr), dark=mr!==null? mr-tm(a.lAs):null;
-  const row=(n,v,hl,src)=>`<div class="kv ${hl?'hl':''}"><span>${n}${src?` <span class="src">${src}</span>`:''}</span><b>${v}</b></div>`;
+  const row=(n,v,hl,src,at)=>`<div class="kv ${hl?'hl':''}" ${at?`data-at="${at}" data-an="${n.replace(/（.*$/,'').replace(/[^\u4e00-\u9fffA-Za-z0-9 ]/g,'').trim()}" data-ad="${key}"`:''}><span>${n}${src?` <span class="src">${src}</span>`:''}</span><b>${v}</b></div>`;
   $('#skyCard').innerHTML=`<div class="card"><h3>${TRIP_DAYS.find(x=>x.d===key).label}　${a.lunar}</h3>
-   ${row('天文曙光始',a.lAr)}${row('航海曙光始',a.lNr)}${row('🔵 藍色時段（晨）',a.lCr+'–'+a.sr,1)}
-   ${row('🌅 日出（嘉義縣・方位 '+a.srAz+'°）',a.sr,1,'氣象署')}
-   ${ZHUSHAN_SUNRISE[key]?row('🌄 祝山觀日平台日出',ZHUSHAN_SUNRISE[key],1,'林鐵處'):''}
+   ${row('天文曙光始',a.lAr)}${row('航海曙光始',a.lNr)}${row('🔵 藍色時段（晨）',a.lCr+'–'+a.sr,1,0,a.lCr)}
+   ${row('🌅 日出（嘉義縣・方位 '+a.srAz+'°）',a.sr,1,'氣象署',a.sr)}
+   ${ZHUSHAN_SUNRISE[key]?row('🌄 祝山觀日平台日出',ZHUSHAN_SUNRISE[key],1,'林鐵處',ZHUSHAN_SUNRISE[key]):''}
    ${row('🟡 黃金時段（晨）',a.sr+'–'+(g.am?fm(g.am):'?'),0,'計算值')}
    ${row('太陽過中天',a.sT+'（仰角 '+a.sA+'）')}
    ${row('🟡 黃金時段（夕）',(g.pm?fm(g.pm):'?')+'–'+a.ss,0,'計算值')}
-   ${row('🌇 日落（方位 '+a.ssAz+'°）',a.ss,1,'氣象署')}
+   ${row('🌇 日落（方位 '+a.ssAz+'°）',a.ss,1,'氣象署',a.ss)}
    ${row('🔵 藍色時段（夕）',a.ss+'–'+a.lCs,1)}
    ${row('航海暮光終',a.lNs)}${row('天文暮光終（全黑）',a.lAs)}
-   ${row('🌙 月出（方位 '+a.mrAz+'°）',a.mr)}${row('🌙 月沒',a.ms)}
-   ${row('✨ 星空最佳（全黑→月出）',a.lAs+'–'+a.mr+(dark?`（${Math.floor(dark/60)}h${pad(dark%60)}m）`:''),1)}
+   ${row('🌙 月出（方位 '+a.mrAz+'°）',a.mr,0,0,a.mr)}${row('🌙 月沒',a.ms)}
+   ${row('✨ 星空最佳（全黑→月出）',a.lAs+'–'+a.mr+(dark?`（${Math.floor(dark/60)}h${pad(dark%60)}m）`:''),1,0,a.lAs)}
    ${a.phen&&a.phen!=='-'?`<div class="muted" style="margin-top:6px">今日天象：${a.phen}</div>`:''}
    <div class="muted" style="margin-top:6px">清晨月亮還掛在西邊天空（月沒 ${a.ms}），清晨不是暗空。</div></div>`;
 }
@@ -528,6 +557,45 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>go(b.dataset.
   if(/tgWebApp/.test(location.hash+location.search)){ const s=document.createElement('script'); s.src='https://telegram.org/js/telegram-web-app.js'; s.onload=()=>{ const tg=window.Telegram&&Telegram.WebApp; if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#1f3b2d');tg.setBackgroundColor('#fbf6ee');}catch(e){}} }; document.head.appendChild(s); }
   if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
+/* ================= ALARM (long-press) ================= */
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const isAndroid=/Android/i.test(navigator.userAgent);
+let sh={};
+function openAlarm(at,name,day){
+  sh={base:tm(at),name,day,lead:0};
+  $('#shTitle').textContent='⏰ '+name;
+  $('#shSub').textContent=day.slice(5).replace('-','/')+(sh.base===null?'・時間未定（例如祝山線 16:30 才公布），請自己輸入':'・原定 '+at);
+  $('#shLead').style.display=sh.base===null?'none':'flex';
+  setLead(sh.base!==null&&/祝山|日出|觀日/.test(name)?30:0);
+  if(sh.base===null)$('#shTime').value='';
+  const ios=`<a class="btn" id="bIOS">📱 iPhone 鬧鐘（捷徑）</a>`, and=`<a class="btn" id="bAnd">🤖 Android 鬧鐘</a>`, ics=`<a class="btn ghost" id="bICS">📅 加到行事曆（含提醒）</a>`;
+  $('#shBtns').innerHTML=isAndroid?and+ics+ios:isIOS?ios+ics+and:ios+and+ics;
+  $('#bIOS').onclick=()=>{const t=$('#shTime').value; if(!t)return toast('請先輸入時間'); location.href='shortcuts://run-shortcut?name='+encodeURIComponent('阿里山鬧鐘')+'&input=text&text='+encodeURIComponent(t+' '+sh.name); };
+  $('#bAnd').onclick=()=>{const t=$('#shTime').value; if(!t)return toast('請先輸入時間'); const [h,m]=t.split(':').map(Number); location.href=`intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=${h};i.android.intent.extra.alarm.MINUTES=${m};S.android.intent.extra.alarm.MESSAGE=${encodeURIComponent('阿里山 '+sh.name)};B.android.intent.extra.alarm.SKIP_UI=false;end`; };
+  $('#bICS').onclick=()=>downloadICS();
+  $('#sheetBg').classList.add('on'); $('#sheet').classList.add('on');
+}
+function setLead(l){ sh.lead=l; document.querySelectorAll('#shLead button').forEach(b=>b.classList.toggle('on',+b.dataset.l===l)); if(sh.base!==null)$('#shTime').value=fm(sh.base-l); }
+document.querySelectorAll('#shLead button').forEach(b=>b.onclick=()=>setLead(+b.dataset.l));
+function closeSheet(){ $('#sheetBg').classList.remove('on'); $('#sheet').classList.remove('on'); }
+$('#sheetBg').onclick=closeSheet; $('#shClose').onclick=closeSheet;
+function downloadICS(){
+  const t=$('#shTime').value; if(!t)return toast('請先輸入時間');
+  const [Y,M,D]=sh.day.split('-').map(Number), [h,m]=t.split(':').map(Number);
+  let dayShift=(sh.base!==null&&tm(t)>sh.base+60)?-1:0; // lead crossed midnight
+  const s=new Date(Date.UTC(Y,M-1,D+dayShift,h-8,m)), e=new Date(s.getTime()+15*60000);
+  const f=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//alishan-trip//TW','BEGIN:VEVENT','UID:'+Date.now()+'@alishan-trip','DTSTAMP:'+f(new Date()),'DTSTART:'+f(s),'DTEND:'+f(e),'SUMMARY:⏰ '+sh.name,'DESCRIPTION:阿里山行程提醒','BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+sh.name,'TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const a=document.createElement('a'); a.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics); a.download='alishan-alarm.ics'; document.body.appendChild(a); a.click(); a.remove();
+}
+let lp=null, suppressClick=false;
+document.addEventListener('pointerdown',e=>{ const el=e.target.closest('[data-at]'); if(!el)return; el.classList.add('pressing');
+  lp={el,x:e.clientX,y:e.clientY,fired:false}; lp.t=setTimeout(()=>{ if(!lp)return; lp.fired=true; el.classList.remove('pressing'); navigator.vibrate&&navigator.vibrate(30); openAlarm(el.dataset.at,el.dataset.an,el.dataset.ad); },550); });
+document.addEventListener('pointermove',e=>{ if(lp&&!lp.fired&&Math.hypot(e.clientX-lp.x,e.clientY-lp.y)>10){ clearTimeout(lp.t); lp.el.classList.remove('pressing'); lp=null; } });
+const endPress=()=>{ if(!lp)return; clearTimeout(lp.t); lp.el.classList.remove('pressing'); if(lp.fired)suppressClick=true; lp=null; };
+document.addEventListener('pointerup',endPress); document.addEventListener('pointercancel',endPress);
+document.addEventListener('click',e=>{ if(suppressClick){ suppressClick=false; e.stopPropagation(); e.preventDefault(); } },true);
+document.addEventListener('contextmenu',e=>{ if(e.target.closest('[data-at]'))e.preventDefault(); });
 function renderPlanKeepOpen(){ const open=[...document.querySelectorAll('#timeline .it.open')].map(e=>e.dataset.i); renderPlan(curDay); open.forEach(i=>{const el=document.querySelector(`#timeline .it[data-i="${i}"]`); el&&el.classList.add('open');}); }
 </script>
 </body>

@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f3b2d">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="阿里山">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>阿里山冒險 Part 2</title>
+<style>
+:root{
+  --forest:#1f3b2d;--forest2:#2e5a43;--moss:#5d8a5a;--hinoki:#c08a55;--hinoki2:#e2b986;--paper:#fbf6ee;--ink:#22302a;--muted:#6b7a70;
+  --warn:#c4472f;--warnbg:#fdebe6;--ok:#2f7a4a;--card:#fffdf9;--line:#e8dccb;
+  --safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+a{color:var(--forest2)}
+button{font:inherit}
+/* ---------- sky hero ---------- */
+#hero{position:relative;height:300px;overflow:hidden;color:#fff;padding-top:var(--safe-t)}
+#sky{position:absolute;inset:0;transition:background 20s linear}
+#stars{position:absolute;inset:0;pointer-events:none;transition:opacity 20s linear}
+.star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:tw 3s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:.25}50%{opacity:1}}
+#sun,#moon{position:absolute;border-radius:50%;opacity:0}
+#hero.anim #sun,#hero.anim #moon{transition:left 60s linear,top 60s linear,opacity 10s}
+#hero:not(.anim) #sky,#hero:not(.anim) #stars{transition:none}
+#sun{width:34px;height:34px;background:radial-gradient(circle,#fff7d6 0,#ffd27a 55%,rgba(255,190,90,0) 72%);filter:drop-shadow(0 0 18px rgba(255,210,120,.9))}
+#moon{width:26px;height:26px}
+.cloud{position:absolute;border-radius:50%;background:rgba(255,255,255,.55);filter:blur(14px);animation:drift linear infinite}
+@keyframes drift{from{transform:translateX(-40vw)}to{transform:translateX(140vw)}}
+#ridges{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:150px}
+#heroTxt{position:absolute;left:16px;right:16px;top:calc(14px + var(--safe-t));text-shadow:0 1px 6px rgba(0,0,0,.45)}
+#heroTxt h1{margin:0;font-size:24px;letter-spacing:1px}
+#clock{font-size:42px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:4px}
+#phase{font-size:15px;opacity:.95}
+#countdown{margin-top:6px;display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:rgba(0,0,0,.28);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border-radius:999px;padding:3px 11px;font-size:14px}
+/* ---------- layout ---------- */
+main{padding:12px 14px calc(96px + var(--safe-b));max-width:720px;margin:0 auto}
+section.page{display:none}section.page.on{display:block}
+h2{font-size:20px;margin:18px 2px 10px;color:var(--forest)}
+h3{font-size:17px;margin:0 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 1px 3px rgba(60,40,10,.06)}
+.alert{background:var(--warnbg);border-color:#f2b9aa}
+.alert b{color:var(--warn)}
+.tip{background:#eef5ec;border-color:#cfe2c9}
+.muted{color:var(--muted);font-size:14px}
+.src{color:var(--muted);font-size:12.5px}
+/* ---------- tabs ---------- */
+nav#tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(31,59,45,.97);display:flex;padding:6px 4px calc(6px + var(--safe-b));z-index:20}
+nav#tabs button{flex:1;background:none;border:0;color:#cfe0d2;padding:6px 0;border-radius:12px;font-size:12.5px;display:flex;flex-direction:column;align-items:center;gap:1px;min-height:52px}
+nav#tabs button .i{font-size:22px;line-height:1.1}
+nav#tabs button.on{color:#fff;background:rgba(255,255,255,.12)}
+/* day switch */
+.seg{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}
+.seg button{flex:0 0 auto;border:1.5px solid var(--forest2);background:#fff;color:var(--forest2);border-radius:999px;padding:8px 14px;font-weight:600;font-size:15px}
+.seg button.on{background:var(--forest2);color:#fff}
+/* timeline */
+.tl{position:relative;margin-left:8px}
+.tl:before{content:"";position:absolute;left:52px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.it{position:relative;display:flex;gap:12px;padding:6px 0}
+.it .t{width:44px;flex:0 0 44px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--forest2);font-size:15px;padding-top:12px}
+.it .dot{position:absolute;left:47px;top:18px;width:12px;height:12px;border-radius:50%;background:var(--hinoki);border:2px solid var(--paper)}
+.it.move .dot{background:#7a90b8}.it.walk .dot{background:var(--moss)}.it.food .dot{background:#d9822b}.it.view .dot{background:#b56fae}.it.must .dot{background:var(--warn)}
+.it .b{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-left:10px}
+.it.now .b{border:2px solid var(--hinoki);box-shadow:0 0 0 4px rgba(192,138,85,.15)}
+.it.past .b{opacity:.55}
+.it .ttl{font-weight:700;font-size:16.5px}
+.dur{display:inline-block;background:#eef2ea;color:#3d5a45;border-radius:8px;padding:1px 8px;font-size:13.5px;margin:4px 6px 0 0}
+.dur.w{background:#fdebe6;color:var(--warn)}
+.more{display:none;margin-top:6px;font-size:15px;color:#3b4a41}
+.it.open .more{display:block}
+.it .b{cursor:pointer}
+.nowtag{display:inline-block;background:var(--hinoki);color:#fff;border-radius:6px;font-size:12px;padding:0 6px;margin-left:6px;vertical-align:2px}
+/* lists */
+ul.clean{margin:6px 0;padding-left:20px}ul.clean li{margin:3px 0}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:15.5px}
+.kv:last-child{border-bottom:0}.kv b{font-variant-numeric:tabular-nums}
+.kv.hl{background:#fff4e4;margin:0 -8px;padding:7px 8px;border-radius:8px}
+.check{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:16px}
+.check:last-child{border:0}
+.check input{width:24px;height:24px;flex:0 0 24px;accent-color:var(--forest2);margin-top:1px}
+.check.done span{text-decoration:line-through;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{background:#f3ece1;border-radius:999px;padding:4px 10px;font-size:14.5px}
+.chip.en{background:#e3efe0;border:1px solid #b9d5b2}
+.chip small{color:var(--muted)}
+.btn{display:inline-block;border:0;background:var(--forest2);color:#fff;border-radius:12px;padding:10px 14px;font-weight:600;text-decoration:none;font-size:15px;margin:4px 6px 0 0}
+.btn.ghost{background:#fff;color:var(--forest2);border:1.5px solid var(--forest2)}
+table.tt{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
+table.tt td,table.tt th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+table.tt tr.hl td{background:#fff4e4;font-weight:700}
+#toast{position:fixed;left:12px;right:12px;bottom:calc(78px + var(--safe-b));background:#2b2a26;color:#fff;border-radius:14px;padding:12px 14px;font-size:15.5px;z-index:30;transform:translateY(40px);opacity:0;visibility:hidden;transition:all .35s;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#toast.on{transform:none;opacity:1;visibility:visible}
+@media (prefers-reduced-motion:reduce){.cloud,.star{animation:none}}
+</style>
+</head>
+<body>
+<header id="hero">
+  <div id="sky"></div>
+  <div id="stars"></div>
+  <div id="moon"></div>
+  <div id="sun"></div>
+  <div id="clouds"></div>
+  <svg id="ridges" viewBox="0 0 400 150" preserveAspectRatio="none" aria-hidden="true">
+    <path id="r1" d="M0 70 L40 52 L70 64 L110 30 L150 58 L190 40 L230 62 L270 26 L310 50 L350 38 L400 56 L400 150 L0 150Z"/>
+    <path id="r2" d="M0 92 L50 74 L90 88 L140 64 L180 84 L230 70 L280 90 L320 72 L360 86 L400 76 L400 150 L0 150Z"/>
+    <path id="r3" d="M0 112 L30 104 L60 110 L100 96 L150 112 L200 100 L250 114 L300 102 L350 112 L400 104 L400 150 L0 150Z"/>
+    <g id="trees"></g>
+  </svg>
+  <div id="heroTxt">
+    <h1>⛰️ 阿里山冒險 Part 2</h1>
+    <div id="clock">--:--</div>
+    <div id="phase">載入中…</div>
+    <div id="countdown"></div>
+  </div>
+</header>
+
+<main>
+  <!-- NOW -->
+  <section class="page on" id="p-now">
+    <div id="nowCard"></div>
+    <div class="card alert">
+      <h3>⚠️ 出發前要先處理的 2 件事</h3>
+      <p><b>① 回程 7329 時間對不上：</b>台灣好行官網目前回程「阿里山發車」只有 10:10、12:20、<b>13:30</b>、<b>14:40</b>、16:40，沒有 13:50。13:30 → 高鐵嘉義約 16:10；14:40 → 約 17:10；16:40 → 19:10 會趕不上 676（19:08）。請確認你們預約票是哪一班。</p>
+      <p><b>② 飯店早餐要再確認：</b>阿里山閣官網公告「2024/11/1 起不再附贈早餐，其他時間亦無供應餐點」。你們行程寫的 7:40–10:00、300 元、前一天 18:00 前預訂，可能是新資訊——Day 1 check-in 時直接問櫃檯最保險。</p>
+      <p class="src">來源：台灣好行 7329 時刻表、阿里山閣官網公告（2026/10/28 查詢）</p>
+    </div>
+    <h2>✅ 待辦清單</h2>
+    <div class="card" id="todo"></div>
+    <h2>🚆 關鍵交通</h2>
+    <div class="card">
+      <div class="kv"><span>10/29 去程 高鐵 609 台北→嘉義</span><b>07:46–09:13</b></div>
+      <div class="kv"><span>7329 高鐵嘉義站（2號出口 7號月台）→阿里山</span><b>09:30–12:00</b></div>
+      <div class="kv"><span>10/31 回程 7329 阿里山→高鐵嘉義（官網）</span><b>13:30–16:10</b></div>
+      <div class="kv"><span>　或 14:40 班</span><b>14:40–17:10</b></div>
+      <div class="kv"><span>10/31 高鐵 676 嘉義→台北</span><b>19:08–20:33</b></div>
+      <p class="src">7329 去程 08:40 那班搭不到（高鐵 09:13 才到），所以是 09:30 班；山區路況可能延誤，官方建議用公車動態查即時位置。</p>
+      <a class="btn ghost" href="https://www.taiwantrip.com.tw/Frontend/Bustime/TimeTable/R0007" target="_blank" rel="noopener">7329 時刻表</a>
+      <a class="btn ghost" href="https://afrts.forest.gov.tw/TP01_1.aspx" target="_blank" rel="noopener">祝山線發車公告</a>
+    </div>
+  </section>
+
+  <!-- ITINERARY -->
+  <section class="page" id="p-plan">
+    <h2>🗓️ 行程</h2>
+    <div class="seg" id="daySeg"></div>
+    <div id="dayHead" class="muted"></div>
+    <div class="tl" id="timeline"></div>
+    <p class="src">點卡片可展開細節。時間是建議排法（未特別標「官方」者為規劃值），步行時間取自官方／飯店公告或步道資料；山區請多抓 10–20% 緩衝。</p>
+  </section>
+
+  <!-- SKY -->
+  <section class="page" id="p-sky">
+    <h2>🌅 日出・夕陽・星空</h2>
+    <div class="seg" id="skySeg"></div>
+    <div id="skyCard"></div>
+    <div class="card tip">
+      <h3>怎麼看這些時間</h3>
+      <ul class="clean">
+        <li><b>氣象署時刻</b>是「嘉義縣」官方資料（海平面、平坦地平線）。</li>
+        <li><b>祝山觀日平台</b>實際看到太陽探出玉山山脈的時間較晚，林鐵處官方表：10/26–31 約 <b>06:30</b>。</li>
+        <li><b>藍色時段</b>以氣象署「民用曙光始→日出／日沒→民用暮光終」呈現。</li>
+        <li><b>黃金時段</b>氣象署沒有公布，這裡用天文公式算太陽高度 6° 的時刻，標示為計算值。</li>
+        <li><b>星空最佳</b>＝天文暮光終（天完全黑）→ 月出。這幾天是農曆 9/20–22 的虧凸月，月亮一出來星星會被洗掉不少。</li>
+      </ul>
+      <button class="btn" id="notifyBtn">🔔 開啟天象提醒</button>
+      <div class="muted" id="notifyState">網頁開著時，會在日出／日落／藍色時段／星空時段前 30 分鐘、10 分鐘提醒。</div>
+    </div>
+    <p class="src">資料：交通部中央氣象署 天文資料（日出日沒、曙暮光、月出月沒；嘉義縣 2026）；林業及自然保育署阿里山林業鐵路及文化資產管理處「祝山觀日平台日出時間概況表」。</p>
+  </section>
+
+  <!-- BIRDS -->
+  <section class="page" id="p-bird">
+    <h2>🐦 賞鳥</h2>
+    <div class="card tip">依各行程點的 eBird 熱點，列出「歷年 10 月」有紀錄的鳥種（依最近一次紀錄排序，越前面越近期）。<span style="background:#e3efe0;border:1px solid #b9d5b2;border-radius:6px;padding:0 5px">綠框</span>＝臺灣特有種。</div>
+    <div id="birds"></div>
+    <p class="src">資料：eBird（Cornell Lab of Ornithology），2026/10/28 擷取各熱點「10 月・所有年份」鳥種名錄。神木站、水山、慈雲寺沒有獨立 eBird 熱點，改用最近的熱點或「阿里山森林遊樂區全區」。</p>
+  </section>
+
+  <!-- NOTES -->
+  <section class="page" id="p-info">
+    <h2>📌 注意事項</h2>
+    <div id="notes"></div>
+  </section>
+</main>
+
+<nav id="tabs">
+  <button data-p="now" class="on"><span class="i">🧭</span>現在</button>
+  <button data-p="plan"><span class="i">🗓️</span>行程</button>
+  <button data-p="sky"><span class="i">🌅</span>天象</button>
+  <button data-p="bird"><span class="i">🐦</span>賞鳥</button>
+  <button data-p="info"><span class="i">📌</span>須知</button>
+</nav>
+<div id="toast"></div>
+
+<script>
+/* ================= DATA ================= */
+const DATA = {"astro":{"2026-10-28":{"sr":"06:02","srAz":"104","sT":"11:43","sA":"53S","ss":"17:23","ssAz":"256","mr":"18:56","mrAz":"61","mT":"01:00","mA":"90N","ms":"08:03","msAz":"297","lAr":"04:46","lNr":"05:12","lCr":"05:39","lCs":"17:46","lNs":"18:13","lAs":"18:39","lunar":"農曆9月19日","phen":"天王星合月"},"2026-10-29":{"sr":"06:02","srAz":"104","sT":"11:43","sA":"53S","ss":"17:22","ssAz":"256","mr":"19:57","mrAz":"60","mT":"02:03","mA":"87N","ms":"09:12","msAz":"300","lAr":"04:46","lNr":"05:13","lCr":"05:39","lCs":"17:46","lNs":"18:12","lAs":"18:39","lunar":"農曆9月20日","phen":"月球過近地點"},"2026-10-30":{"sr":"06:03","srAz":"105","sT":"11:43","sA":"53S","ss":"17:22","ssAz":"255","mr":"21:02","mrAz":"60","mT":"03:07","mA":"86N","ms":"10:17","msAz":"300","lAr":"04:47","lNr":"05:13","lCr":"05:40","lCs":"17:45","lNs":"18:12","lAs":"18:38","lunar":"農曆9月21日","phen":"-"},"2026-10-31":{"sr":"06:04","srAz":"105","sT":"11:42","sA":"52S","ss":"17:21","ssAz":"255","mr":"22:10","mrAz":"63","mT":"04:11","mA":"87N","ms":"11:17","msAz":"298","lAr":"04:47","lNr":"05:14","lCr":"05:40","lCs":"17:44","lNs":"18:11","lAs":"18:37","lunar":"農曆9月22日","phen":"-"},"2026-11-01":{"sr":"06:04","srAz":"105","sT":"11:42","sA":"52S","ss":"17:20","ssAz":"255","mr":"23:16","mrAz":"68","mT":"05:11","mA":"90N","ms":"12:08","msAz":"294","lAr":"04:48","lNr":"05:14","lCr":"05:41","lCs":"17:44","lNs":"18:10","lAs":"18:37","lunar":"農曆9月23日","phen":"-"}},"birds":{"L3946239":["林鵰 Ictinaetus malaiensis","巨嘴鴉 Corvus macrorhynchos","煤山雀 Periparus ater","繡眼畫眉 Alcippe morrisonia","黃胸藪眉 Liocichla steerii","火冠戴菊鳥 Regulus goodfellowi","臺灣紫嘯鶇 Myophonus insularis","栗背林鴝 Tarsiger johnstoniae","黃胸青鶲 Ficedula hyperythra","褐頭花翼 Fulvetta formosana","山紅頭 Cyanoderma ruficeps","鉛色水鶇 Phoenicurus fuliginosus","金背鳩 Streptopelia orientalis","小啄木 Yungipicus canicapillus","小卷尾 Dicrurus aeneus","松鴉 Garrulus glandarius","青背山雀 Parus monticolus","臺灣鷦眉 Pnoepyga formosana","東方毛腳燕 Delichon dasypus","紅頭山雀 Aegithalos concinnus","紋翼畫眉 Actinodura morrisoniana","茶腹鳾 Sitta europaea","褐鷽 Pyrrhula nipalensis","小剪尾 Enicurus scouleri","松雀鷹 Tachyspiza virgata","臺灣噪眉 Trochalopteron morrisonianum","紅尾鶲 Muscicapa ferruginea","白尾鴝 Myiomela leucura","紅胸啄花 Dicaeum ignipectus","臺灣朱雀 Carpodacus formosanus","灰林鴿 Columba pulchricollis","樹鵲 Dendrocitta formosae","棕面鶯 Abroscopus albogularis","深山鶯 Horornis acanthizoides","冠羽畫眉 Yuhina brunneiceps","小翼鶇 Brachypteryx goodfellowi","白鶺鴒 Motacilla alba","灰鷽 Pyrrhula owstoni","灰鶺鴒 Motacilla cinerea","星鴉 Nucifraga hemispila","白耳畫眉 Heterophasia auricularis","大冠鷲 Spilornis cheela"],"L7504877":["松鴉 Garrulus glandarius","青背山雀 Parus monticolus","東方毛腳燕 Delichon dasypus","冠羽畫眉 Yuhina brunneiceps","山紅頭 Cyanoderma ruficeps","繡眼畫眉 Alcippe morrisonia","臺灣噪眉 Trochalopteron morrisonianum","紋翼畫眉 Actinodura morrisoniana","黃胸藪眉 Liocichla steerii","火冠戴菊鳥 Regulus goodfellowi","茶腹鳾 Sitta europaea","臺灣紫嘯鶇 Myophonus insularis","白尾鴝 Myiomela leucura","栗背林鴝 Tarsiger johnstoniae","鉛色水鶇 Phoenicurus fuliginosus","紅胸啄花 Dicaeum ignipectus","臺灣朱雀 Carpodacus formosanus","巨嘴鴉 Corvus macrorhynchos","臺灣鷦眉 Pnoepyga formosana","紅頭山雀 Aegithalos concinnus","黑長尾雉 Syrmaticus mikado","星鴉 Nucifraga hemispila","褐頭花翼 Fulvetta formosana","白耳畫眉 Heterophasia auricularis"],"L33485486":["青背山雀 Parus monticolus","繡眼畫眉 Alcippe morrisonia","臺灣噪眉 Trochalopteron morrisonianum","黃胸藪眉 Liocichla steerii","白尾鴝 Myiomela leucura","巨嘴鴉 Corvus macrorhynchos","臺灣紫嘯鶇 Myophonus insularis","小雨燕 Apus affinis","林鵰 Ictinaetus malaiensis","深山鶯 Horornis acanthizoides","冠羽畫眉 Yuhina brunneiceps","白耳畫眉 Heterophasia auricularis","小翼鶇 Brachypteryx goodfellowi","栗背林鴝 Tarsiger johnstoniae","黑長尾雉 Syrmaticus mikado","松鴉 Garrulus glandarius","煤山雀 Periparus ater","東方毛腳燕 Delichon dasypus","紅頭山雀 Aegithalos concinnus","山紅頭 Cyanoderma ruficeps","紋翼畫眉 Actinodura morrisoniana","火冠戴菊鳥 Regulus goodfellowi","茶腹鳾 Sitta europaea","灰鶺鴒 Motacilla cinerea","褐鷽 Pyrrhula nipalensis"],"L5600913":["松鴉 Garrulus glandarius","青背山雀 Parus monticolus","臺灣鷦眉 Pnoepyga formosana","褐頭花翼 Fulvetta formosana","臺灣噪眉 Trochalopteron morrisonianum","茶腹鳾 Sitta europaea","林鵰 Ictinaetus malaiensis","大赤啄木 Dendrocopos leucotos","煤山雀 Periparus ater","山紅頭 Cyanoderma ruficeps","繡眼畫眉 Alcippe morrisonia","白耳畫眉 Heterophasia auricularis","紋翼畫眉 Actinodura morrisoniana","黃胸藪眉 Liocichla steerii","火冠戴菊鳥 Regulus goodfellowi","紅尾鶲 Muscicapa ferruginea","白尾鴝 Myiomela leucura","臺灣白眉林鴝 Tarsiger formosanus","栗背林鴝 Tarsiger johnstoniae","大冠鷲 Spilornis cheela","東方毛腳燕 Delichon dasypus","冠羽畫眉 Yuhina brunneiceps","黃嘴角鴞 Otus spilocephalus","叉尾雨燕 Apus pacificus","星鴉 Nucifraga hemispila","臺灣紫嘯鶇 Myophonus insularis","巨嘴鴉 Corvus macrorhynchos","大彎嘴 Erythrogenys erythrocnemis","小翼鶇 Brachypteryx goodfellowi","黑長尾雉 Syrmaticus mikado","紅頭山雀 Aegithalos concinnus","小雨燕 Apus affinis","家燕 Hirundo rustica","棕面鶯 Abroscopus albogularis","褐鷽 Pyrrhula nipalensis"],"L6081784":["松鴉 Garrulus glandarius","青背山雀 Parus monticolus","繡眼畫眉 Alcippe morrisonia","紋翼畫眉 Actinodura morrisoniana","火冠戴菊鳥 Regulus goodfellowi","茶腹鳾 Sitta europaea","臺灣紫嘯鶇 Myophonus insularis","紅頭山雀 Aegithalos concinnus","黃胸藪眉 Liocichla steerii","煤山雀 Periparus ater","臺灣噪眉 Trochalopteron morrisonianum","臺灣鷦眉 Pnoepyga formosana","褐鷽 Pyrrhula nipalensis","灰鷽 Pyrrhula owstoni","山紅頭 Cyanoderma ruficeps","小雨燕 Apus affinis","大冠鷲 Spilornis cheela","林鵰 Ictinaetus malaiensis","大赤啄木 Dendrocopos leucotos","灰喉山椒鳥 Pericrocotus solaris","巨嘴鴉 Corvus macrorhynchos","臺灣叢樹鶯 Locustella alishanensis","家燕 Hirundo rustica","深山鶯 Horornis acanthizoides","褐頭花翼 Fulvetta formosana","冠羽畫眉 Yuhina brunneiceps","白耳畫眉 Heterophasia auricularis","鷦鷯 Nannus troglodytes","小翼鶇 Brachypteryx goodfellowi","臺灣白眉林鴝 Tarsiger formosanus","綠啄花 Dicaeum minullum","白鶺鴒 Motacilla alba","臺灣朱雀 Carpodacus formosanus"],"L1758340":["繡眼畫眉 Alcippe morrisonia","青背山雀 Parus monticolus","臺灣噪眉 Trochalopteron morrisonianum","黃胸藪眉 Liocichla steerii","白尾鴝 Myiomela leucura","林鵰 Ictinaetus malaiensis","巨嘴鴉 Corvus macrorhynchos","煤山雀 Periparus ater","火冠戴菊鳥 Regulus goodfellowi","臺灣紫嘯鶇 Myophonus insularis","栗背林鴝 Tarsiger johnstoniae","黃胸青鶲 Ficedula hyperythra","褐頭花翼 Fulvetta formosana","山紅頭 Cyanoderma ruficeps","鉛色水鶇 Phoenicurus fuliginosus","紅頭山雀 Aegithalos concinnus","茶腹鳾 Sitta europaea","褐鷽 Pyrrhula nipalensis","松鴉 Garrulus glandarius","臺灣鷦眉 Pnoepyga formosana","紋翼畫眉 Actinodura morrisoniana","東方金腰燕 Cecropis daurica","棕面鶯 Abroscopus albogularis","冠羽畫眉 Yuhina brunneiceps","紅尾鶲 Muscicapa ferruginea","灰鶺鴒 Motacilla cinerea","金背鳩 Streptopelia orientalis","小卷尾 Dicrurus aeneus","白耳畫眉 Heterophasia auricularis","小啄木 Yungipicus canicapillus","東方毛腳燕 Delichon dasypus","小剪尾 Enicurus scouleri","紅胸啄花 Dicaeum ignipectus","臺灣朱雀 Carpodacus formosanus","大赤啄木 Dendrocopos leucotos","臺灣白眉林鴝 Tarsiger formosanus","松雀鷹 Tachyspiza virgata","星鴉 Nucifraga hemispila","白鶺鴒 Motacilla alba","灰林鴿 Columba pulchricollis","樹鵲 Dendrocitta formosae","深山鶯 Horornis acanthizoides","小翼鶇 Brachypteryx goodfellowi","灰鷽 Pyrrhula owstoni","小雨燕 Apus affinis","極北柳鶯 Phylloscopus borealis","大冠鷲 Spilornis cheela","黑長尾雉 Syrmaticus mikado","黃嘴角鴞 Otus spilocephalus","黃腹琉璃 Niltava vivida","樹鷚 Anthus hodgsoni","叉尾雨燕 Apus pacificus","大彎嘴 Erythrogenys erythrocnemis","紅尾伯勞 Lanius cristatus","家燕 Hirundo rustica","藍腹鷴 Lophura swinhoii","小鶯 Horornis fortipes","黃尾鴝 Phoenicurus auroreus","灰面鵟鷹 Butastur indicus","東方鵟 Buteo japonicus","臺灣叢樹鶯 Locustella alishanensis","灰喉山椒鳥 Pericrocotus solaris","鷦鷯 Nannus troglodytes","綠啄花 Dicaeum minullum","洋燕 Hirundo javanica"]}};
+// preview helper: ?t=2026-10-30T05:45 simulates Taipei time
+(()=>{const q=new URLSearchParams(location.search).get('t'); if(q){const [d,t]=q.split('T');const [Y,M,D]=d.split('-').map(Number);const [h,mi]=(t||'12:00').split(':').map(Number); window.__dbgOffset=Date.UTC(Y,M-1,D,h-8,mi)-Date.now();}})();
+const ASTRO = DATA.astro;
+const ZHUSHAN_SUNRISE = {'2026-10-29':'06:30','2026-10-30':'06:30','2026-10-31':'06:30'}; // 林鐵處 祝山觀日平台日出時間概況表（10月26~31日）
+const LAT=23.5114, LON=120.8040; // 阿里山森林遊樂區（遊客中心一帶）
+
+const TRIP_DAYS=[
+ {d:'2026-10-29',label:'Day 1｜10/29（四）',wx:'晴 11–16°C'},
+ {d:'2026-10-30',label:'Day 2｜10/30（五）',wx:'晴 11–18°C'},
+ {d:'2026-10-31',label:'Day 3｜10/31（六）',wx:'陰 12–17°C'},
+];
+
+// type: move / walk / food / view / must ; d = duration chips; w = warning chips
+const PLAN={
+'2026-10-29':[
+ {t:'07:46',e:'09:13',k:'move',n:'高鐵 609 台北 → 嘉義',d:['車程 1h27m'],m:'嘉義站下車後往 2 號出口。'},
+ {t:'09:30',e:'12:00',k:'move',n:'台灣好行 7329 → 阿里山',d:['車程約 2h30m','山路彎多'],w:['高鐵到站後只有 17 分鐘轉乘'],m:'上車點：高鐵嘉義站 2 號出口 7 號月台（官網）。易暈車的人上車前先吃暈車藥、坐前排。石棹加油站（去程）可能暫停如廁，需要可先跟司機說。抵達後在大門售票口買入園票，<b>票根和發票保管好</b>，住宿期間進出要用。'},
+ {t:'12:05',e:'12:55',k:'food',n:'遊客中心一帶午餐',d:['約 50 分'],m:'水餃、牛肉麵晚上比較早關（想吃趁中午）；熱炒；石頭火鍋開比較晚，大約到 20:30。'},
+ {t:'12:55',e:'13:20',k:'walk',n:'郵局寫明信片',d:['約 20–25 分'],m:'郵局營業時間未查證，到了先確認。'},
+ {t:'13:20',e:'13:35',k:'walk',n:'7-11 補給',d:['約 15 分'],m:'晚餐決策：如果已訂到 19:00 阿里山閣火鍋就不用買；沒訂到可先買備案。順便買明早日出要吃的暖暖包、熱飲。'},
+ {t:'13:35',e:'13:55',k:'must',n:'阿里山車站 2F：領日出火車票',d:['約 15 分'],m:'祝山線發車時間「前一天 16:30」才公布（林鐵官網、阿里山車站 2F、遊樂區大門、旅客中心）。阿里山閣住客在<b>沼平站</b>上車（祝山線第 2 站），座位不劃位。'},
+ {t:'14:00',e:'14:06',k:'move',n:'沼平線 阿里山 → 沼平（首選）',d:['車程 6 分'],w:['上行末班 15:40'],m:'官方時刻（阿里山開）：13:00、13:30、14:00、14:30、15:10、15:40。11:30–13:00 中間沒車。<br>備案：飯店接駁車從遊客中心發車 12:30–17:00 每 30 分（整點／半點），車程約 7 分，到了先打 05-2679611。'},
+ {t:'14:10',e:'14:25',k:'walk',n:'阿里山閣 check in／寄放行李',d:['飯店就在沼平站旁'],m:'官方進房時間 15:00 後；提早到可問櫃檯能否先寄放行李（未查證）。'},
+ {t:'14:25',e:'15:10',k:'walk',n:'環潭步道（姊妹潭）',d:['沼平→姊妹潭 約 15 分','繞一圈約 40 分'],m:'沿途：姊妹潭、三兄弟、四姊妹、木蘭園。常有台灣獼猴，不要餵食、食物收好。'},
+ {t:'15:10',e:'15:30',k:'food',n:'香林（受鎮宮一帶）吃點心',d:['約 20 分']},
+ {t:'15:30',e:'15:55',k:'walk',n:'神木站・巨木群棧道',d:['約 20–25 分'],m:'神木線末班回阿里山站 16:10（官方）。'},
+ {t:'15:55',e:'16:25',k:'must',n:'阿里山博物館',d:['參觀約 30 分'],w:['16:30 關門'],m:'這站是今天最硬的時間點，晚於 16:00 到就只剩很短時間。'},
+ {t:'16:25',e:'16:35',k:'walk',n:'香林國小（全台最高學府）',d:['約 10 分']},
+ {t:'16:45',e:'17:35',k:'view',n:'慈雲寺觀景台 看夕陽',d:['日沒 17:22（氣象署）','藍色時段 17:22–17:46'],m:'建議 17:00 前到位：黃金時段（計算值）約 16:50 起。日沒後還有約 20 多分鐘的藍色時段，天色最漂亮。'},
+ {t:'17:35',e:'17:55',k:'walk',n:'走回阿里山閣',d:['約 15–20 分'],w:['18:00 飯店→遊客中心車 很趕'],m:'飯店晚間接駁：<b>飯店發車 18:00、19:00</b>；<b>遊客中心發車回飯店 18:15、19:15、20:15</b>（官方）。提前 5–10 分到乘車處。'},
+ {t:'18:40',e:'19:00',k:'view',n:'✨ 黑夜星空小窗口',d:['天文暮光終 18:39 → 月出 19:57'],m:'今晚天全黑到月亮升起約 1 小時 18 分。吃飯前在飯店外先看 15 分鐘最划算（記得關手機螢幕亮度讓眼睛適應）。'},
+ {t:'19:00',e:'20:30',k:'food',n:'晚餐（三選一）',d:['首選：19:00 阿里山閣火鍋（到 20:30）'],m:'A．阿里山閣火鍋 19:00（要先訂）<br>B．搭 19:00 飯店車去遊客中心吃，回程 20:15 末班（石頭火鍋約開到 20:30，注意牛肉麵／水餃較早關）<br>C．下午先在 7-11 買好'},
+ {t:'21:00',e:'',k:'must',n:'睡前：確認明早祝山線時間',d:['16:30 已公布'],m:'鬧鐘設在發車前 40 分；沼平站在發車前 20 分開站。頭燈／手電筒、外套、手套、帽子、暖暖包放門口。'},
+],
+'2026-10-30':[
+ {t:'--:--',e:'',k:'must',n:'祝山線觀日列車（沼平站上車）',d:['發車時間依前一天 16:30 公告','沼平→祝山 約 20–25 分'],m:'飯店<b>沒有</b>觀日接駁，07:30 前園區沒有交通車，走到沼平站即可（就在飯店旁）。單趟 150 元。座位不劃位，早點排隊。'},
+ {t:'06:30',e:'',k:'view',n:'祝山觀日平台 日出',d:['林鐵官方：10/26–31 約 06:30','氣象署地平線日出 06:03'],m:'民用曙光始 05:40 天空就開始變色，藍色時段 05:40–06:03。虧凸月（農曆 9/21）在西方天空，月沒 10:17，可以拍「日月同框」。清晨山頂體感可能 10°C 以下。'},
+ {t:'06:45',e:'07:15',k:'walk',n:'小笠原山觀景台',d:['祝山站→小笠原 500 m 大陡坡','至少 15 分'],m:'阿里山閣官網：「約 500 公尺大陡坡，請至少估 15 分鐘腳程」。360 度視野，可看玉山群峰與雲海。'},
+ {t:'07:15',e:'08:15',k:'walk',n:'下山回沼平（觀日步道）',d:['單趟票→步行下山','約 50–60 分'],m:'官方步道資料：沼平→祝山林道 1K、林道→祝山車站 1.2K（上行各約 30 分）；下坡會快一些。<b>觀日步道 11/1 起封閉一年，今天還能走。</b>若改搭回程車，回程班次公告在祝山車站。'},
+ {t:'08:20',e:'09:10',k:'food',n:'商店街買早餐',d:['沼平→遊客中心 步行約 25 分 / 飯店車 7 分'],m:'飯店早上的車（飯店→遊客中心）07:30、08:00、08:40、09:20…（以飯店公告為準）。回程可搭沼平線：阿里山站 09:00、09:30、10:00…（6 分）。'},
+ {t:'09:30',e:'11:30',k:'walk',n:'回飯店補眠 😴',d:['約 2 小時']},
+ {t:'11:45',e:'12:30',k:'food',n:'香林吃午餐（可外帶回飯店）',d:['約 45 分']},
+ {t:'13:30',e:'13:50',k:'walk',n:'經阿里山賓館 → 阿里山詩路',d:['步行約 20 分']},
+ {t:'13:50',e:'15:20',k:'walk',n:'水山巨木步道／水山療癒步道',d:['步道 2.36 km','高低差 46 m','含拍照約 1–1.5 h'],m:'台灣山林悠遊網：水山療癒步道全長 2.36 公里、海拔 2,271–2,317 m，坡度平緩。'},
+ {t:'16:50',e:'17:40',k:'view',n:'（選配）找地方看夕陽',d:['日沒 17:22','藍色時段 17:22–17:45']},
+ {t:'17:50',e:'',k:'must',n:'18:00 前：向櫃檯預訂明天早餐',d:['先確認還有沒有供應'],w:['截止 18:00']},
+ {t:'18:00',e:'20:15',k:'food',n:'遊客中心晚餐 + 7-11 補給',d:['走森之道 約 25 分','或 18:00／19:00 飯店車'],m:'回飯店：遊客中心發車 18:15、19:15、20:15（末班）。錯過末班只能走回去（約 25 分，夜路帶燈）。'},
+ {t:'18:40',e:'21:00',k:'view',n:'✨ 本趟最佳星空夜',d:['天文暮光終 18:38 → 月出 21:02','全黑約 2h24m'],m:'這晚月亮最晚升起，是三天裡最適合看星星的。找遠離路燈的地方（例如沼平公園一帶空曠處），眼睛適應 10–15 分鐘。'},
+],
+'2026-10-31':[
+ {t:'07:40',e:'08:20',k:'food',n:'飯店早餐（若有）或 7-11',d:['7:40–10:00 / 300 元']},
+ {t:'08:25',e:'09:45',k:'walk',n:'觀日步道（向上約 30 分）',d:['來回含拍照約 1h20m'],w:['今天是封閉前最後一天'],m:'林業保育署：觀日步道 2026/11/1–2027/10/31 封閉整修，之後要去祝山／小笠原要改由第二管制哨進入。'},
+ {t:'09:45',e:'10:30',k:'walk',n:'回飯店整理行李',d:['約 45 分']},
+ {t:'10:30',e:'10:37',k:'move',n:'飯店車 → 遊客中心（帶行李）',d:['車程 7 分'],w:['11:00 退房 / 末班 11:30'],m:'退房接駁（飯店→遊客中心）：07:30、08:00、08:40、09:20、09:50、10:30、11:00、11:30（末班）。行李放遊客中心。'},
+ {t:'10:45',e:'11:45',k:'walk',n:'阿里山生態教育館',d:['08:30 開館','參觀約 45–60 分'],m:'位於舊阿里山工作站（中正村 68 號），含林業故事館、山野創作館。'},
+ {t:'11:50',e:'12:50',k:'food',n:'遊客中心午餐',d:['約 1 小時']},
+ {t:'13:30',e:'16:10',k:'must',n:'台灣好行 7329 → 高鐵嘉義站',d:['官網 13:30 班 約 2h40m'],w:['你們寫 13:50，請確認'],m:'官網回程班次：13:30（→16:10）、14:40（→17:10）。兩班都趕得上 19:08 高鐵；16:40 那班 19:10 才到，<b>不行</b>。回程有停「故宮南院」。'},
+ {t:'19:08',e:'20:33',k:'move',n:'高鐵 676 嘉義 → 台北',d:['車程 1h25m'],m:'到嘉義站後還有 2–3 小時，可以在站內吃晚餐。'},
+]};
+
+const TODOS=[
+ ['t1','確認 7329 回程預約票是 13:30 還是 14:40 班'],
+ ['t2','訂 10/29 19:00 阿里山閣火鍋'],
+ ['t3','Day 1 到阿里山車站 2F 領日出火車票'],
+ ['t4','Day 1 16:30 後查祝山線發車時間，設鬧鐘'],
+ ['t5','Day 1 check-in 時問：早餐還有沒有供應？'],
+ ['t6','Day 2 18:00 前預訂 Day 3 早餐（若有）'],
+ ['t7','明信片＋郵票'],
+ ['t8','頭燈／手電筒、手套、帽子、暖暖包'],
+ ['t9','行動電源、暈車藥'],
+ ['t10','出發前在有網路時打開這個 App 一次（離線也能看）'],
+];
+
+const ENDEMIC=new Set(['臺灣噪眉','黃胸藪眉','栗背林鴝','火冠戴菊鳥','褐頭花翼','紋翼畫眉','白耳畫眉','冠羽畫眉','臺灣紫嘯鶇','臺灣鷦眉','臺灣朱雀','黑長尾雉','藍腹鷴','臺灣白眉林鴝','臺灣叢樹鶯','大彎嘴','灰鷽','繡眼畫眉','小翼鶇']);
+const BIRD_SPOTS=[
+ {id:'L3946239',name:'沼平（車站＆公園）・環潭步道・慈雲寺',when:'Day 1 下午／Day 2 星空夜',tip:'沼平是阿里山紀錄最多的熱點之一，早上和傍晚最活躍。慈雲寺沒有獨立熱點，就在沼平旁邊，可參考此清單。'},
+ {id:'L33485486',name:'祝山車站／觀日平台',when:'Day 2 日出',tip:'日出前後鳥況好，等日出時可以注意火冠戴菊鳥、煤山雀在針葉樹梢活動。'},
+ {id:'L5600913',name:'小笠原山觀景台',when:'Day 2 清晨',tip:'視野開闊，注意天空中的林鵰、大冠鷲盤旋。'},
+ {id:'L7504877',name:'祝山觀日步道',when:'Day 2 下山／Day 3 早上',tip:'步道林下注意栗背林鴝、白尾鴝、臺灣紫嘯鶇等地面活動的鳥。'},
+ {id:'L6081784',name:'遊客中心一帶',when:'每天吃飯時',tip:'吃飯前後抬頭看看，常有冠羽畫眉、紅頭山雀等混群。'},
+ {id:'L1758340',name:'阿里山森林遊樂區全區（神木站、水山步道參考）',when:'Day 1 神木站／Day 2 水山',tip:'神木站、水山步道沒有獨立熱點，用全區 10 月清單參考。'},
+];
+
+const NOTES=[
+ {h:'🧥 天氣與穿著',b:['氣溫 11–18°C，早晚溫差大；祝山日出時通常比白天更冷，洋蔥式穿搭＋防風外套、手套、帽子。','山區午後容易起霧，步道濕滑，穿止滑好走的鞋。','海拔約 2,200 m，動作放慢、多喝水。'],
+  links:[['氣象署｜阿里山國家森林遊樂區天氣','https://www.cwa.gov.tw/V8/C/L/NatForest/NatForest.html?PID=E032']]},
+ {h:'🏨 阿里山閣接駁車（官方）',b:['電話 05-2679611；車子是白色 20 人座中巴，車身寫「阿里山閣大飯店」。','進房：遊客中心發車 12:30–17:00，每 30 分（整點、半點），到了先打電話確認。','晚間：飯店發車 18:00、19:00；遊客中心發車 18:15、19:15、20:15。','退房：飯店發車 07:30、08:00、08:40、09:20、09:50、10:30、11:00、11:30（末班）。','早上 07:30 以前園區和飯店都沒有交通車。','走路：飯店↔遊客中心至少抓 25 分鐘。'],
+  links:[['飯店接駁車公告','https://www.agh.com.tw/html/about/index.aspx?id=18']]},
+ {h:'🚂 林鐵支線（官方時刻）',b:['沼平線（阿里山開）：09:00、09:30、10:00、10:30、11:00、11:30、13:00、13:30、14:00、14:30、15:10、15:40；車程 6 分。','沼平線（沼平開）：09:20、09:50、10:20、10:50、11:20、11:50、13:20、13:50、14:20、15:00、15:30、16:00。','神木線（神木開往阿里山）末班 16:10。','祝山線：前一天 16:30 公布發車時間；阿里山閣住客在沼平站上車，發車前 20 分開站，不劃位。'],
+  links:[['林鐵支線時刻表','https://afrch.forest.gov.tw/0000300'],['祝山線發車公告／訂票','https://afrts.forest.gov.tw/TP01_1.aspx']]},
+ {h:'🚧 觀日步道 11/1 起封閉一年',b:['2026/11/1–2027/10/31 封閉整修。你們 10/30、10/31 都還可以走。','封閉後去祝山觀日區、對高岳、植物園、小笠原山要改由第二管制哨進入。'],
+  links:[['林業保育署公告','https://www.forest.gov.tw/news/0079379']]},
+ {h:'🎫 入園與其他',b:['入園門票票根＋發票要保管好，住宿期間進出大門要用。','台灣獼猴常出沒，不要餵食，塑膠袋食物收好。','山上訊號不穩，重要資訊截圖；這個 App 打開過一次後可離線使用。','7329 山區路況可能延誤，用「台灣好行公車動態」看即時位置。'],
+  links:[['台灣好行 7329','https://www.taiwantrip.com.tw/Frontend/Bustime/TimeTable/R0007']]},
+];
+
+/* ================= HELPERS ================= */
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const tm=s=>{if(!s||s==='-'||s==='--:--')return null;const [h,m]=s.split(':').map(Number);return h*60+m};
+const fm=m=>pad(Math.floor(((m%1440)+1440)%1440/60))+':'+pad(Math.round(((m%1440)+1440)%1440%60));
+function nowTW(){ // always Asia/Taipei
+  const d=new Date(Date.now()+ (8*60 + new Date().getTimezoneOffset())*60000 + (window.__dbgOffset||0));
+  return d;
+}
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const minsOf=d=>d.getHours()*60+d.getMinutes()+d.getSeconds()/60;
+function astroFor(key){ if(ASTRO[key])return ASTRO[key]; const ks=Object.keys(ASTRO).sort(); return key<ks[0]?ASTRO[ks[0]]:ASTRO[ks[ks.length-1]]; }
+
+/* NOAA solar altitude (for golden hour only; labelled as computed) */
+function sunAlt(date){ // date = JS Date in real UTC instant
+  const rad=Math.PI/180, jd=date.getTime()/86400000+2440587.5, T=(jd-2451545)/36525;
+  const L0=(280.46646+T*(36000.76983+T*0.0003032))%360, M=357.52911+T*(35999.05029-0.0001537*T);
+  const e=0.016708634-T*(0.000042037+0.0000001267*T);
+  const C=Math.sin(M*rad)*(1.914602-T*(0.004817+0.000014*T))+Math.sin(2*M*rad)*(0.019993-0.000101*T)+Math.sin(3*M*rad)*0.000289;
+  const lam=L0+C-0.00569-0.00478*Math.sin((125.04-1934.136*T)*rad);
+  const eps=23+(26+(21.448-T*(46.815+T*(0.00059-T*0.001813)))/60)/60+0.00256*Math.cos((125.04-1934.136*T)*rad);
+  const dec=Math.asin(Math.sin(eps*rad)*Math.sin(lam*rad));
+  const y=Math.tan(eps*rad/2)**2;
+  const Et=4/rad*(y*Math.sin(2*L0*rad)-2*e*Math.sin(M*rad)+4*e*y*Math.sin(M*rad)*Math.cos(2*L0*rad)-0.5*y*y*Math.sin(4*L0*rad)-1.25*e*e*Math.sin(2*M*rad));
+  const utcMin=date.getUTCHours()*60+date.getUTCMinutes()+date.getUTCSeconds()/60;
+  const tst=utcMin+Et+4*LON, ha=(tst/4-180)*rad;
+  return Math.asin(Math.sin(LAT*rad)*Math.sin(dec)+Math.cos(LAT*rad)*Math.cos(dec)*Math.cos(ha))/rad;
+}
+function goldenTimes(key){ // returns {am, pm} minutes (Taipei) when altitude crosses +6°
+  const [Y,Mo,D]=key.split('-').map(Number); let am=null,pm=null,prev=null;
+  for(let m=300;m<=1140;m++){ const dt=new Date(Date.UTC(Y,Mo-1,D,0,0)+ (m-480)*60000); const a=sunAlt(dt);
+    if(prev!==null){ if(prev<6&&a>=6&&am===null)am=m; if(prev>=6&&a<6)pm=m; } prev=a; }
+  return {am,pm};
+}
+
+/* ================= SKY ================= */
+const C=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+function skyNodes(a){
+  const sr=tm(a.sr), ss=tm(a.ss);
+  return [
+   [0,'#060a1c','#0d1433','#1a2350'],
+   [tm(a.lAr),'#080d22','#121a40','#232c5c'],
+   [tm(a.lNr),'#0f1838','#25305e','#4a4777'],
+   [tm(a.lCr),'#1f2f63','#4b5a90','#a7809f'],
+   [sr-15,'#355a9a','#7d8fbf','#f2a27c'],
+   [sr,'#4f7bbd','#a3b6d8','#ffc27a'],
+   [sr+20,'#6b98d2','#b7cfe9','#ffdca6'],
+   [sr+60,'#6fa6e3','#a9d0f2','#e4f0fb'],
+   [tm(a.sT),'#4f9be8','#8cc4f2','#d7ecfb'],
+   [ss-90,'#5d9fe0','#9ccaf0','#e3f0f8'],
+   [ss-45,'#6a9bd2','#b4c8e2','#ffd9a0'],
+   [ss-15,'#5f7cb4','#c79aa6','#ffae6a'],
+   [ss,'#4a5c9a','#b77f99','#ff8a5c'],
+   [ss+10,'#3b4885','#7d6a9a','#e57c6e'],
+   [tm(a.lCs),'#262f68','#4a4a80','#8a6896'],
+   [tm(a.lNs),'#141c45','#232c5c','#3b3b6b'],
+   [tm(a.lAs),'#080d22','#111a3f','#1d2550'],
+   [1440,'#060a1c','#0d1433','#1a2350'],
+  ];
+}
+function mix(c1,c2,f){const a=C(c1),b=C(c2);return 'rgb('+a.map((v,i)=>Math.round(v+(b[i]-v)*f)).join(',')+')'}
+function inRange(m,a,b){ if(a===null||b===null)return false; return a<=b? (m>=a&&m<b) : (m>=a||m<b); }
+
+function buildStars(){ const s=$('#stars'); let h=''; for(let i=0;i<70;i++){ const x=Math.random()*100,y=Math.random()*55,sz=Math.random()<.15?3:2; h+=`<i class="star" style="left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;animation-delay:${(Math.random()*3).toFixed(2)}s;animation-duration:${(2+Math.random()*3).toFixed(1)}s"></i>`;} s.innerHTML=h;
+  let c=''; for(let i=0;i<5;i++){ c+=`<div class="cloud" style="top:${60+Math.random()*120}px;width:${140+Math.random()*160}px;height:${30+Math.random()*30}px;animation-duration:${70+Math.random()*90}s;animation-delay:-${Math.random()*120}s"></div>`;} $('#clouds').innerHTML=c;
+  let t=''; for(let x=4;x<400;x+=9+Math.random()*8){ const y=108+Math.random()*10, hgt=14+Math.random()*16; t+=`<path d="M${x} ${y} l${hgt*.28} -${hgt} l${hgt*.28} ${hgt}Z"/>`;} $('#trees').innerHTML=t;
+}
+function moonSVG(daysFromFull){ // waning gibbous: lit on left side
+  const k=Math.cos(Math.PI*Math.min(daysFromFull,14.7)/14.77); // 1 full → -1 new
+  const rx=Math.abs(k)*12;
+  return `<svg viewBox="0 0 26 26" width="26" height="26"><circle cx="13" cy="13" r="12" fill="#2a2f45"/><path d="M13 1 A12 12 0 0 0 13 25 A${rx} 12 0 0 ${k>0?0:1} 13 1Z" fill="#f4efd9"/></svg>`;
+}
+
+function phaseText(m,a,gold){
+  const sr=tm(a.sr),ss=tm(a.ss);
+  if(m<tm(a.lAr)||m>=tm(a.lAs))return '🌌 星空時段';
+  if(m<tm(a.lNr))return '🌌 天文曙光';
+  if(m<tm(a.lCr))return '🌒 航海曙光（天色漸亮）';
+  if(m<sr)return '🔵 藍色時段（民用曙光）';
+  if(gold.am&&m<gold.am)return '🟡 黃金時段（晨）';
+  if(m<720-60)return '☀️ 上午';
+  if(m<780)return '☀️ 中午';
+  if(gold.pm&&m<gold.pm)return '🌤️ 下午';
+  if(m<ss)return '🟡 黃金時段（夕）';
+  if(m<tm(a.lCs))return '🔵 藍色時段（民用暮光）';
+  if(m<tm(a.lNs))return '🌆 航海暮光';
+  return '🌃 天文暮光（快全黑了）';
+}
+
+function eventsAround(now){ // list of upcoming events today + tomorrow
+  const out=[]; for(let off=0;off<2;off++){ const d=new Date(now.getTime()+off*86400000), key=ymd(d), a=ASTRO[key]; if(!a)continue; const g=goldenTimes(key), base=off*1440;
+    const push=(m,n,src)=>{ if(m!==null)out.push({m:m+base,n,src,key}); };
+    push(tm(a.lCr),'藍色時段開始（晨）','氣象署');
+    push(tm(a.sr),'日出（氣象署）','氣象署');
+    if(ZHUSHAN_SUNRISE[key])push(tm(ZHUSHAN_SUNRISE[key]),'祝山日出','林鐵處');
+    if(g.pm)push(g.pm,'黃金時段開始（夕）','計算值');
+    push(tm(a.ss),'日落','氣象署');
+    push(tm(a.lCs),'藍色時段結束','氣象署');
+    push(tm(a.lAs),'星空時段開始','氣象署');
+    push(tm(a.mr),'月出','氣象署'); push(tm(a.ms),'月沒','氣象署');
+  } return out.sort((x,y)=>x.m-y.m);
+}
+
+let lastNotified={};
+function tickSky(){
+  const now=nowTW(), key=ymd(now), a=astroFor(key), m=minsOf(now), g=goldenTimes(ASTRO[key]?key:Object.keys(ASTRO)[0]);
+  $('#clock').textContent=pad(now.getHours())+':'+pad(now.getMinutes());
+  // gradient by interpolation (minute-level)
+  const N=skyNodes(a); let i=0; while(i<N.length-2&&m>=N[i+1][0])i++; const A=N[i],B=N[i+1]; const f=Math.max(0,Math.min(1,(m-A[0])/Math.max(1,B[0]-A[0])));
+  const top=mix(A[1],B[1],f),mid=mix(A[2],B[2],f),bot=mix(A[3],B[3],f);
+  $('#sky').style.background=`linear-gradient(180deg,${top} 0%,${mid} 55%,${bot} 100%)`;
+  // ridges darkness
+  const sr=tm(a.sr),ss=tm(a.ss); const day=m>=sr&&m<=ss; const light= day?1: (m<sr? Math.max(0,1-(sr-m)/60) : Math.max(0,1-(m-ss)/60));
+  const shade=(base,f2)=>mix(base,'#0a1410',1-(0.25+0.75*light)*f2);
+  $('#r1').setAttribute('fill',shade('#5f7f86',1)); $('#r2').setAttribute('fill',shade('#3f6a55',1)); $('#r3').setAttribute('fill',shade('#24452f',1)); $('#trees').setAttribute('fill',shade('#1a3424',1));
+  $('#clouds').style.opacity=(0.18+0.82*light).toFixed(2);
+  // stars
+  const lNs=tm(a.lNs),lAs=tm(a.lAs),lAr=tm(a.lAr),lNr=tm(a.lNr); let so=0;
+  if(m>=lAs||m<lAr)so=1; else if(m>=lNs&&m<lAs)so=(m-lNs)/(lAs-lNs); else if(m>=lAr&&m<lNr)so=1-(m-lAr)/(lNr-lAr);
+  const W=$('#hero').clientWidth, H=170;
+  // moon
+  const mr=tm(a.mr), ms=tm(a.ms); let mUp=false, mf=0;
+  if(mr!==null&&ms!==null){ if(mr>ms){ mUp=m>=mr||m<ms; const span=(ms+1440-mr); mf=((m-mr+1440)%1440)/span; } else { mUp=m>=mr&&m<ms; mf=(m-mr)/(ms-mr);} }
+  else if(mr===null&&ms!==null){ mUp=m<ms; mf=0.5+m/ms*0.5; }
+  const moon=$('#moon'); moon.style.opacity=mUp?1:0;
+  if(mUp){ moon.style.left=(W*0.08+W*0.84*(1-mf))+'px'; moon.style.top=(60+H*0.75*(1-Math.sin(Math.PI*Math.min(1,Math.max(0,mf)))))+'px'; }
+  const full=new Date(2026,9,26), dff=(now-full)/86400000; moon.innerHTML=moonSVG(Math.max(0,dff));
+  if(mUp&&so>0)so*=0.55; // bright waning gibbous washes out stars
+  $('#stars').style.opacity=so.toFixed(2);
+  // sun
+  const sun=$('#sun'); const sf=(m-sr)/(ss-sr); sun.style.opacity=(sf>-0.03&&sf<1.03)?1:0;
+  sun.style.left=(W*0.06+W*0.86*(1-sf))+'px'; sun.style.top=(70+H*0.8*(1-Math.sin(Math.PI*Math.max(0,Math.min(1,sf)))))+'px';
+  let ph=phaseText(m,a,g); if(mUp&&/星空|天文暮光/.test(ph))ph='🌔 月光夜（月亮已升起，星星變少）';
+  $('#phase').textContent=(ASTRO[key]?'':'（行程外，用最近日期的天象）')+ph+'｜'+(a.lunar||'');
+  // countdowns
+  const ev=eventsAround(now).filter(e=>e.m>m).filter(e=>/日出|日落|星空|藍色時段開始/.test(e.n)).slice(0,3);
+  $('#countdown').innerHTML=ev.map(e=>{const d=Math.round(e.m-m);return `<span class="pill">${e.n} ${fm(e.m)}・${d>=60?Math.floor(d/60)+'h'+pad(d%60)+'m':d+' 分'}</span>`}).join('');
+  // reminders
+  if(notifyOn){ for(const e of eventsAround(now)){ if(!/日出|日落|星空|藍色時段開始|黃金/.test(e.n))continue; const d=e.m-m; for(const lead of [30,10]){ const id=e.key+e.n+lead; if(d<=lead&&d>lead-1.2&&!lastNotified[id]){ lastNotified[id]=1; remind(`${e.n} 還有 ${lead} 分鐘（${fm(e.m)}・${e.src}）`);} } } }
+}
+
+/* ================= REMINDERS ================= */
+let notifyOn=localStorage.getItem('notifyOn')==='1';
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),7000); }
+function remind(t){ toast('🔔 '+t); if(navigator.vibrate)navigator.vibrate([200,100,200]); try{ if('Notification' in window&&Notification.permission==='granted'){ navigator.serviceWorker&&navigator.serviceWorker.ready.then(r=>r.showNotification('阿里山天象提醒',{body:t,icon:'icon-192.png'})).catch(()=>new Notification('阿里山天象提醒',{body:t})); } }catch(e){} }
+function renderNotify(){ $('#notifyBtn').textContent=notifyOn?'🔕 關閉天象提醒':'🔔 開啟天象提醒'; }
+$('#notifyBtn').onclick=async()=>{ notifyOn=!notifyOn; localStorage.setItem('notifyOn',notifyOn?'1':'0'); if(notifyOn&&'Notification' in window&&Notification.permission==='default'){ try{await Notification.requestPermission();}catch(e){} } renderNotify(); toast(notifyOn?'已開啟：網頁開著時會在天象前 30／10 分鐘提醒':'已關閉提醒'); };
+
+/* ================= RENDER ================= */
+function chipList(arr,cls){return (arr||[]).map(x=>`<span class="dur ${cls||''}">${x}</span>`).join('')}
+let curDay=null;
+function renderPlan(key){
+  curDay=key; const day=TRIP_DAYS.find(x=>x.d===key);
+  $('#daySeg').innerHTML=TRIP_DAYS.map(x=>`<button data-d="${x.d}" class="${x.d===key?'on':''}">${x.label.split('｜')[0]} ${x.d.slice(5).replace('-','/')}</button>`).join('');
+  $('#daySeg').querySelectorAll('button').forEach(b=>b.onclick=()=>renderPlan(b.dataset.d));
+  const a=ASTRO[key]; $('#dayHead').innerHTML=`${day.label}・${day.wx}　🌅 ${a.sr}　🌇 ${a.ss}　🌙 ${a.mr} 升`;
+  const now=nowTW(), today=ymd(now), m=minsOf(now);
+  $('#timeline').innerHTML=PLAN[key].map((it,idx)=>{
+    const s=tm(it.t), e=tm(it.e)||(s!==null?s+30:null); let st='';
+    if(today===key&&s!==null){ if(m>=s&&m<e)st='now'; else if(m>=e)st='past'; } else if(today>key)st='past';
+    return `<div class="it ${it.k} ${st}" data-i="${idx}"><div class="t">${it.t}</div><span class="dot"></span><div class="b"><div class="ttl">${it.n}${st==='now'?'<span class="nowtag">現在</span>':''}</div>${it.e?`<div class="muted">${it.t}–${it.e}</div>`:''}<div>${chipList(it.d)}${chipList(it.w,'w')}</div>${it.m?`<div class="more">${it.m}</div>`:''}</div></div>`;
+  }).join('');
+  $('#timeline').querySelectorAll('.it').forEach(el=>el.onclick=()=>el.classList.toggle('open'));
+}
+function renderNow(){
+  const now=nowTW(), key=ymd(now), m=minsOf(now);
+  let html='';
+  if(PLAN[key]){
+    const items=PLAN[key]; let cur=null,next=null;
+    for(const it of items){ const s=tm(it.t); if(s===null)continue; const e=tm(it.e)||s+30; if(m>=s&&m<e)cur=it; if(s>m&&!next)next=it; }
+    html+=`<div class="card"><h3>📍 ${TRIP_DAYS.find(x=>x.d===key).label}</h3>`+
+      (cur?`<div><b>現在：</b>${cur.n}</div><div>${chipList(cur.d)}${chipList(cur.w,'w')}</div>`:'')+
+      (next?`<div style="margin-top:6px"><b>下一站 ${next.t}：</b>${next.n}（${Math.round(tm(next.t)-m)} 分後）</div><div>${chipList(next.d)}${chipList(next.w,'w')}</div>`:'<div class="muted">今天行程跑完了，好好休息 🌙</div>')+
+      `<button class="btn" style="margin-top:8px" onclick="go('plan')">看今天完整行程</button></div>`;
+  } else if(key<'2026-10-29'){
+    const days=Math.ceil((new Date(2026,9,29)-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/86400000);
+    html+=`<div class="card"><h3>🎒 出發倒數 ${days} 天</h3><div>10/29（四）07:46 高鐵 609 台北出發。明早先確認下面的待辦。</div></div>`;
+  } else html+=`<div class="card"><h3>🏡 旅程結束</h3><div class="muted">回憶都在相簿裡了。</div></div>`;
+  $('#nowCard').innerHTML=html;
+}
+function renderTodo(){
+  const st=JSON.parse(localStorage.getItem('todo')||'{}');
+  $('#todo').innerHTML=TODOS.map(([id,t])=>`<label class="check ${st[id]?'done':''}"><input type="checkbox" data-id="${id}" ${st[id]?'checked':''}><span>${t}</span></label>`).join('');
+  $('#todo').querySelectorAll('input').forEach(c=>c.onchange=()=>{const s=JSON.parse(localStorage.getItem('todo')||'{}');s[c.dataset.id]=c.checked;localStorage.setItem('todo',JSON.stringify(s));renderTodo();});
+}
+function renderSky(key){
+  $('#skySeg').innerHTML=TRIP_DAYS.map(x=>`<button data-d="${x.d}" class="${x.d===key?'on':''}">${x.d.slice(5).replace('-','/')}</button>`).join('');
+  $('#skySeg').querySelectorAll('button').forEach(b=>b.onclick=()=>renderSky(b.dataset.d));
+  const a=ASTRO[key], g=goldenTimes(key), mr=tm(a.mr), dark=mr!==null? mr-tm(a.lAs):null;
+  const row=(n,v,hl,src)=>`<div class="kv ${hl?'hl':''}"><span>${n}${src?` <span class="src">${src}</span>`:''}</span><b>${v}</b></div>`;
+  $('#skyCard').innerHTML=`<div class="card"><h3>${TRIP_DAYS.find(x=>x.d===key).label}　${a.lunar}</h3>
+   ${row('天文曙光始',a.lAr)}${row('航海曙光始',a.lNr)}${row('🔵 藍色時段（晨）',a.lCr+'–'+a.sr,1)}
+   ${row('🌅 日出（嘉義縣・方位 '+a.srAz+'°）',a.sr,1,'氣象署')}
+   ${ZHUSHAN_SUNRISE[key]?row('🌄 祝山觀日平台日出',ZHUSHAN_SUNRISE[key],1,'林鐵處'):''}
+   ${row('🟡 黃金時段（晨）',a.sr+'–'+(g.am?fm(g.am):'?'),0,'計算值')}
+   ${row('太陽過中天',a.sT+'（仰角 '+a.sA+'）')}
+   ${row('🟡 黃金時段（夕）',(g.pm?fm(g.pm):'?')+'–'+a.ss,0,'計算值')}
+   ${row('🌇 日落（方位 '+a.ssAz+'°）',a.ss,1,'氣象署')}
+   ${row('🔵 藍色時段（夕）',a.ss+'–'+a.lCs,1)}
+   ${row('航海暮光終',a.lNs)}${row('天文暮光終（全黑）',a.lAs)}
+   ${row('🌙 月出（方位 '+a.mrAz+'°）',a.mr)}${row('🌙 月沒',a.ms)}
+   ${row('✨ 星空最佳（全黑→月出）',a.lAs+'–'+a.mr+(dark?`（${Math.floor(dark/60)}h${pad(dark%60)}m）`:''),1)}
+   ${a.phen&&a.phen!=='-'?`<div class="muted" style="margin-top:6px">今日天象：${a.phen}</div>`:''}
+   <div class="muted" style="margin-top:6px">清晨月亮還掛在西邊天空（月沒 ${a.ms}），清晨不是暗空。</div></div>`;
+}
+function renderBirds(){
+  $('#birds').innerHTML=BIRD_SPOTS.map(s=>{ const list=DATA.birds[s.id]||[]; const en=list.filter(x=>ENDEMIC.has(x.split(' ')[0])).length;
+    const chips=list.map((x,i)=>{const [zh,...sci]=x.split(' ');return `<span class="chip ${ENDEMIC.has(zh)?'en':''}" ${i>=14?'data-x hidden':''}>${zh}</span>`}).join('');
+    return `<div class="card"><h3>${s.name}</h3><div class="muted">${s.when}・10 月共 ${list.length} 種（特有種 ${en}）</div><div style="margin:6px 0">${s.tip}</div><div class="chips">${chips}</div>
+    ${list.length>14?`<button class="btn ghost" onclick="this.parentElement.querySelectorAll('[data-x]').forEach(e=>e.hidden=!e.hidden);this.textContent=this.textContent.includes('全部')?'收合':'顯示全部 ${list.length} 種'">顯示全部 ${list.length} 種</button>`:''}
+    <a class="btn ghost" href="https://ebird.org/hotspot/${s.id}/bird-list?yr=all&m=10" target="_blank" rel="noopener">eBird 熱點</a></div>`;}).join('');
+}
+function renderNotes(){
+  $('#notes').innerHTML=NOTES.map(n=>`<div class="card"><h3>${n.h}</h3><ul class="clean">${n.b.map(x=>`<li>${x}</li>`).join('')}</ul>${(n.links||[]).map(([t,u])=>`<a class="btn ghost" href="${u}" target="_blank" rel="noopener">${t}</a>`).join('')}</div>`).join('')+
+  `<p class="src">資料查詢日：2026/10/28。來源：中央氣象署、林業及自然保育署嘉義分署、阿里山林鐵及文化資產管理處、台灣好行、阿里山閣大飯店官網、台灣山林悠遊網、健行筆記、eBird。</p>`;
+}
+function go(p){ document.querySelectorAll('section.page').forEach(s=>s.classList.toggle('on',s.id==='p-'+p)); document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p)); window.scrollTo({top:0}); location.hash=p; }
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>go(b.dataset.p));
+
+/* ================= INIT ================= */
+(function init(){
+  const today=ymd(nowTW()); const startDay=PLAN[today]?today:'2026-10-29';
+  buildStars(); renderTodo(); renderPlan(startDay); renderSky(startDay); renderBirds(); renderNotes(); renderNow(); renderNotify();
+  tickSky(); setTimeout(()=>$('#hero').classList.add('anim'),300); setInterval(()=>{tickSky();},20000); setInterval(()=>{renderNow(); if(curDay)renderPlanKeepOpen();},60000);
+  if(location.hash&&document.getElementById('p-'+location.hash.slice(1)))go(location.hash.slice(1));
+  // Telegram Mini App support (only loads inside Telegram)
+  if(/tgWebApp/.test(location.hash+location.search)){ const s=document.createElement('script'); s.src='https://telegram.org/js/telegram-web-app.js'; s.onload=()=>{ const tg=window.Telegram&&Telegram.WebApp; if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#1f3b2d');tg.setBackgroundColor('#fbf6ee');}catch(e){}} }; document.head.appendChild(s); }
+  if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+function renderPlanKeepOpen(){ const open=[...document.querySelectorAll('#timeline .it.open')].map(e=>e.dataset.i); renderPlan(curDay); open.forEach(i=>{const el=document.querySelector(`#timeline .it[data-i="${i}"]`); el&&el.classList.add('open');}); }
+</script>
+</body>
+</html>

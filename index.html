@@ -77,6 +77,7 @@ nav#tabs button.on{color:#fff;background:rgba(255,255,255,.12)}
 .more{display:none;margin-top:6px;font-size:15px;color:#3b4a41}
 .it.open .more{display:block}
 .it .b{cursor:pointer}
+a.map{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:#e8f1ea;color:var(--forest2);font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;vertical-align:middle}
 .nowtag{display:inline-block;background:var(--hinoki);color:#fff;border-radius:6px;font-size:12px;padding:0 6px;margin-left:6px;vertical-align:2px}
 /* lists */
 ul.clean{margin:6px 0;padding-left:20px}ul.clean li{margin:3px 0}
@@ -245,6 +246,18 @@ const TRIP_DAYS=[
  {d:'2026-10-31',label:'Day 3｜10/31（六）',wx:'陰 12–17°C'},
 ];
 
+// map lookup: first regex that matches an item name → Google Maps query
+const PLACES=[
+ [/高鐵 609/,null],[/遊客中心(一帶)?[午晚]餐/,'阿里山遊客中心'],[/7329 → 阿里山/,'高鐵嘉義站 2號出口'],[/郵局/,'阿里山郵局'],[/7-11/,'7-ELEVEN 阿里山門市'],
+ [/阿里山車站/,'阿里山車站'],[/沼平線|祝山線|沼平站/,'沼平車站'],[/阿里山閣|回飯店|飯店早餐|飯店車/,'阿里山閣大飯店'],
+ [/環潭|姊妹潭/,'姊妹潭'],[/香林國小/,'香林國小'],[/香林|受鎮宮/,'阿里山受鎮宮'],[/神木站/,'阿里山神木車站'],
+ [/阿里山博物館/,'阿里山博物館'],[/慈雲寺/,'阿里山慈雲寺'],[/祝山觀日平台|祝山 日出/,'祝山觀日平台'],
+ [/小笠原山/,'小笠原山觀景台'],[/觀日步道/,'祝山觀日步道'],[/商店街/,'阿里山商店街'],[/阿里山賓館|詩路/,'阿里山賓館'],
+ [/水山/,'水山巨木'],[/生態教育館/,'阿里山生態教育館'],[/大巴迴車處/,'阿里山國家森林遊樂區 大巴停車場'],
+ [/奮起湖/,'奮起湖老街'],[/觸口/,'觸口遊客中心'],[/高鐵嘉義站|676/,'高鐵嘉義站'],[/星空/,'沼平公園'],[/遊客中心/,'阿里山遊客中心'],
+];
+function mapQ(n){ for(const [re,q] of PLACES) if(re.test(n)) return q; return null; }
+function mapBtn(n){ const q=mapQ(n); return q?`<a class="map" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${q}">📍 地圖</a>`:''; }
 // type: move / walk / food / view / must ; d = duration chips; w = warning chips
 const PLAN={
 '2026-10-29':[
@@ -494,7 +507,7 @@ function renderPlan(key){
   $('#timeline').innerHTML=PLAN[key].map((it,idx)=>{
     const s=tm(it.t), e=tm(it.e)||(s!==null?s+30:null); let st='';
     if(today===key&&s!==null){ if(m>=s&&m<e)st='now'; else if(m>=e)st='past'; } else if(today>key)st='past';
-    return `<div class="it ${it.k} ${st}" data-i="${idx}" data-at="${it.t}" data-an="${it.n.replace(/"/g,'&quot;')}" data-ad="${key}"><div class="t">${it.t}</div><span class="dot"></span><div class="b"><div class="ttl">${it.n}${st==='now'?'<span class="nowtag">現在</span>':''}</div>${it.e?`<div class="muted">${it.t}–${it.e}</div>`:''}<div>${chipList(it.d)}${chipList(it.w,'w')}</div>${it.m?`<div class="more">${it.m}</div>`:''}</div></div>`;
+    return `<div class="it ${it.k} ${st}" data-i="${idx}" data-at="${it.t}" data-an="${it.n.replace(/"/g,'&quot;')}" data-ad="${key}"><div class="t">${it.t}</div><span class="dot"></span><div class="b"><div class="ttl">${it.n}${st==='now'?'<span class="nowtag">現在</span>':''}${mapBtn(it.n)}</div>${it.e?`<div class="muted">${it.t}–${it.e}</div>`:''}<div>${chipList(it.d)}${chipList(it.w,'w')}</div>${it.m?`<div class="more">${it.m}</div>`:''}</div></div>`;
   }).join('');
   $('#timeline').querySelectorAll('.it').forEach(el=>el.onclick=()=>el.classList.toggle('open'));
 }
@@ -505,8 +518,8 @@ function renderNow(){
     const items=PLAN[key]; let cur=null,next=null;
     for(const it of items){ const s=tm(it.t); if(s===null)continue; const e=tm(it.e)||s+30; if(m>=s&&m<e)cur=it; if(s>m&&!next)next=it; }
     html+=`<div class="card"><h3>📍 ${TRIP_DAYS.find(x=>x.d===key).label}</h3>`+
-      (cur?`<div><b>現在：</b>${cur.n}</div><div>${chipList(cur.d)}${chipList(cur.w,'w')}</div>`:'')+
-      (next?`<div style="margin-top:6px"><b>下一站 ${next.t}：</b>${next.n}（${Math.round(tm(next.t)-m)} 分後）</div><div>${chipList(next.d)}${chipList(next.w,'w')}</div>`:'<div class="muted">今天行程跑完了，好好休息 🌙</div>')+
+      (cur?`<div><b>現在：</b>${cur.n} ${mapBtn(cur.n)}</div><div>${chipList(cur.d)}${chipList(cur.w,'w')}</div>`:'')+
+      (next?`<div style="margin-top:6px"><b>下一站 ${next.t}：</b>${next.n}（${Math.round(tm(next.t)-m)} 分後） ${mapBtn(next.n)}</div><div>${chipList(next.d)}${chipList(next.w,'w')}</div>`:'<div class="muted">今天行程跑完了，好好休息 🌙</div>')+
       `<button class="btn" style="margin-top:8px" onclick="go('plan')">看今天完整行程</button></div>`;
   } else if(key<'2026-10-29'){
     const days=Math.ceil((new Date(2026,9,29)-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/86400000);

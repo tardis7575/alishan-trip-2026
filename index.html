@@ -141,9 +141,10 @@ table.tt tr.hl td{background:#fff4e4;font-weight:700}
     <div id="nowCard"></div>
     <div class="card alert">
       <h3>⚠️ 出發前要先處理的 2 件事</h3>
-      <p><b>① 回程 7329 時間對不上：</b>台灣好行官網目前回程「阿里山發車」只有 10:10、12:20、<b>13:30</b>、<b>14:40</b>、16:40，沒有 13:50。13:30 → 高鐵嘉義約 16:10；14:40 → 約 17:10；16:40 → 19:10 會趕不上 676（19:08）。請確認你們預約票是哪一班。</p>
+      <p><b>① 回程改搭郵輪式巴士（已訂 2 張）：</b>10/31 <b>13:50 在「大巴迴車處」集合</b>、14:00 準時發車，途中停奮起湖（送甜甜圈）、觸口，預計 <b>18:30 到高鐵嘉義 2 號出口</b>。離 676（19:08）只有約 38 分鐘緩衝。<b>兩人都要帶身分證件</b>，領隊會核對。</p>
       <p><b>② 飯店早餐要再確認：</b>阿里山閣官網公告「2024/11/1 起不再附贈早餐，其他時間亦無供應餐點」。你們行程寫的 7:40–10:00、300 元、前一天 18:00 前預訂，可能是新資訊——Day 1 check-in 時直接問櫃檯最保險。</p>
-      <p class="src">來源：台灣好行 7329 時刻表、阿里山閣官網公告（2026/10/28 查詢）</p>
+      <p class="src">來源：郵輪式巴士電子憑證與行程頁（雄獅旅遊，2026/10/29 查詢）、阿里山閣官網公告</p>
+      <a class="btn" onclick="openVoucher()">🎫 回程巴士電子憑證</a>
     </div>
     <h2>✅ 待辦清單</h2>
     <div class="card" id="todo"></div>
@@ -152,10 +153,10 @@ table.tt tr.hl td{background:#fff4e4;font-weight:700}
     <div class="card">
       <div class="kv"><span>10/29 去程 高鐵 609 台北→嘉義</span><b>07:46–09:13</b></div>
       <div class="kv"><span>7329 高鐵嘉義站（2號出口 7號月台）→阿里山</span><b>09:30–12:00</b></div>
-      <div class="kv"><span>10/31 回程 7329 阿里山→高鐵嘉義（官網）</span><b>13:30–16:10</b></div>
-      <div class="kv"><span>　或 14:40 班</span><b>14:40–17:10</b></div>
+      <div class="kv"><span>10/31 郵輪式巴士 大巴迴車處 13:50 集合</span><b>14:00 發車</b></div>
+      <div class="kv"><span>　途經奮起湖、觸口 → 高鐵嘉義 2 號出口</span><b>約 18:30 到</b></div>
       <div class="kv"><span>10/31 高鐵 676 嘉義→台北</span><b>19:08–20:33</b></div>
-      <p class="src">7329 去程 08:40 那班搭不到（高鐵 09:13 才到），所以是 09:30 班；山區路況可能延誤，官方建議用公車動態查即時位置。</p>
+      <p class="src">回程郵輪式巴士：標準票 2 張，下車點高鐵嘉義站。7329 去程 08:40 那班搭不到（高鐵 09:13 才到），所以是 09:30 班；山區路況可能延誤，官方建議用公車動態查即時位置。</p>
       <a class="btn ghost" href="https://www.taiwantrip.com.tw/Frontend/Bustime/TimeTable/R0007" target="_blank" rel="noopener">7329 時刻表</a>
       <a class="btn ghost" href="https://afrts.forest.gov.tw/TP01_1.aspx" target="_blank" rel="noopener">祝山線發車公告</a>
     </div>
@@ -288,12 +289,17 @@ const PLAN={
  {t:'10:30',e:'10:37',k:'move',n:'飯店車 → 遊客中心（帶行李）',d:['車程 7 分'],w:['11:00 退房 / 末班 11:30'],m:'退房接駁（飯店→遊客中心）：07:30、08:00、08:40、09:20、09:50、10:30、11:00、11:30（末班）。行李放遊客中心。'},
  {t:'10:45',e:'11:45',k:'walk',n:'阿里山生態教育館',d:['08:30 開館','參觀約 45–60 分'],m:'位於舊阿里山工作站（中正村 68 號），含林業故事館、山野創作館。'},
  {t:'11:50',e:'12:50',k:'food',n:'遊客中心午餐',d:['約 1 小時']},
- {t:'13:30',e:'16:10',k:'must',n:'台灣好行 7329 → 高鐵嘉義站',d:['官網 13:30 班 約 2h40m'],w:['你們寫 13:50，請確認'],m:'官網回程班次：13:30（→16:10）、14:40（→17:10）。兩班都趕得上 19:08 高鐵；16:40 那班 19:10 才到，<b>不行</b>。回程有停「故宮南院」。'},
- {t:'19:08',e:'20:33',k:'move',n:'高鐵 676 嘉義 → 台北',d:['車程 1h25m'],m:'到嘉義站後還有 2–3 小時，可以在站內吃晚餐。'},
+ {t:'13:35',e:'13:50',k:'walk',n:'遊客中心取行李 → 大巴迴車處',d:['提早 15 分出發']},
+ {t:'13:50',e:'14:00',k:'must',n:'郵輪式巴士集合（大巴迴車處）',d:['14:00 準時發車','標準票 ×2'],w:['帶身分證件，領隊核對'],m:'認明車身有「雄獅旅遊」標誌、前擋玻璃有「阿里山郵輪式專車」。行李可以放車上。<br><a class="btn" onclick="event.stopPropagation();openVoucher()">🎫 打開電子憑證</a>'},
+ {t:'14:00',e:'15:00',k:'move',n:'巴士 → 奮起湖',d:['車程約 1 小時']},
+ {t:'15:00',e:'16:20',k:'food',n:'奮起湖 912 機關車庫＋老街',d:['停留約 1h20m','送甜甜圈 1 顆／人'],m:'導遊會導覽 912 機關車庫。到「老街第一家甜甜圈」出示電子憑證裡的甜甜圈 QR code 兌換，每張票 1 顆（9:30–17:00）。'},
+ {t:'17:20',e:'17:40',k:'view',n:'觸口遊客中心（休息站）',d:['停 20 分']},
+ {t:'18:30',e:'18:30',k:'must',n:'抵達高鐵嘉義站 2 號出口',d:['預計 18:30'],w:['離 676 只有約 38 分'],m:'行程頁寫的是預計時間，山路塞車可能延誤。萬一晚到，可以在高鐵 App 改搭後面的班次（自由座或改票）。晚餐建議在奮起湖買點東西在車上吃。'},
+ {t:'19:08',e:'20:33',k:'move',n:'高鐵 676 嘉義 → 台北',d:['車程 1h25m']},
 ]};
 
 const TODOS=[
- ['t1','確認 7329 回程預約票是 13:30 還是 14:40 班'],
+ ['t1','10/31 兩人帶身分證件（郵輪式巴士要核對）'],
  ['t2','訂 10/29 19:00 阿里山閣火鍋'],
  ['t3','Day 1 到阿里山車站 2F 領日出火車票'],
  ['t4','Day 1 16:30 後查祝山線發車時間，設鬧鐘'],
@@ -324,7 +330,7 @@ const NOTES=[
   links:[['林鐵支線時刻表','https://afrch.forest.gov.tw/0000300'],['祝山線發車公告／訂票','https://afrts.forest.gov.tw/TP01_1.aspx']]},
  {h:'🚧 觀日步道 11/1 起封閉一年',b:['2026/11/1–2027/10/31 封閉整修。你們 10/30、10/31 都還可以走。','封閉後去祝山觀日區、對高岳、植物園、小笠原山要改由第二管制哨進入。'],
   links:[['林業保育署公告','https://www.forest.gov.tw/news/0079379']]},
- {h:'🎫 入園與其他',b:['入園門票票根＋發票要保管好，住宿期間進出大門要用。','台灣獼猴常出沒，不要餵食，塑膠袋食物收好。','山上訊號不穩，重要資訊截圖；這個 App 打開過一次後可離線使用。','7329 山區路況可能延誤，用「台灣好行公車動態」看即時位置。'],
+ {h:'🎫 入園與其他',b:['入園門票票根＋發票要保管好，住宿期間進出大門要用。','台灣獼猴常出沒，不要餵食，塑膠袋食物收好。','山上訊號不穩，重要資訊截圖；這個 App 打開過一次後可離線使用。','7329 山區路況可能延誤，用「台灣好行公車動態」看即時位置。','回程郵輪式巴士：13:50 大巴迴車處集合，預計 18:30 到高鐵嘉義。'],
   links:[['台灣好行 7329','https://www.taiwantrip.com.tw/Frontend/Bustime/TimeTable/R0007']]},
 ];
 
@@ -557,6 +563,18 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>go(b.dataset.
   if(/tgWebApp/.test(location.hash+location.search)){ const s=document.createElement('script'); s.src='https://telegram.org/js/telegram-web-app.js'; s.onload=()=>{ const tg=window.Telegram&&Telegram.WebApp; if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#1f3b2d');tg.setBackgroundColor('#fbf6ee');}catch(e){}} }; document.head.appendChild(s); }
   if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
+/* ================= VOUCHER (stored only on this device) ================= */
+const VKEY='alishan-voucher';
+function openVoucher(){
+  let v=localStorage.getItem(VKEY);
+  if(!v){
+    v=(prompt('貼上回程巴士的電子憑證連結（只會存在這支手機，不會上傳）')||'').trim();
+    if(!/^https:\/\/voucher\.fontour\.com\//.test(v)){ if(v)toast('連結格式不對，要是 voucher.fontour.com 開頭'); return; }
+    localStorage.setItem(VKEY,v); toast('已存在這支手機');
+  }
+  window.open(v,'_blank','noopener');
+}
+function resetVoucher(){ localStorage.removeItem(VKEY); toast('已清除憑證連結'); }
 /* ================= ALARM (long-press) ================= */
 const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const isAndroid=/Android/i.test(navigator.userAgent);
